@@ -17,14 +17,29 @@ if (!SUPABASE_KEY) {
 
 const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_KEY);
 
-export async function getMessages() {
-  const { data, error } = await supabase.from("messages").select();
+export async function getMessages(page: number) {
+  const ENTRIES_PER_PAGE = 8;
+  const START = page * ENTRIES_PER_PAGE;
+  const END = START + ENTRIES_PER_PAGE;
+
+  const { data, error } = await supabase
+    .from("messages")
+    .select()
+    .eq("visible", true)
+    .order("id", { ascending: false })
+    .range(START, END);
 
   if (error) {
     console.log(error);
-  }
+    return [];
+  } else {
+    // the client does not need the visible column since it's always going to be true
+    data.forEach((val) => {
+      val.visible = undefined;
+    });
 
-  return data;
+    return data;
+  }
 }
 
 export async function insertMessage(name: string, content: string, reply: number | null) {

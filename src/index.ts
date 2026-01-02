@@ -16,8 +16,25 @@ app.get("/", (req, res): void => {
 });
 
 app.get("/guestbook", (req, res) => {
-  getMessages().then((data) => {
-    res.json(data);
+  // make sure request body is defined
+  if (!req.body) {
+    req.body = {};
+  }
+
+  let { page } = req.body;
+
+  page = Number(page);
+  if (page < 0 || Number.isNaN(page)) {
+    page = 0;
+  }
+
+  getMessages(page).then((data) => {
+    let response = {
+      count: data.length,
+      entries: data,
+    };
+
+    res.json(response);
   });
 });
 
