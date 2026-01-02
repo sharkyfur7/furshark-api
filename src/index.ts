@@ -3,6 +3,9 @@ import { getMessages, insertMessage } from "./guestbook_database.js";
 import dotenv from "dotenv";
 
 dotenv.config({ quiet: true });
+
+const DEV_ENV = process.env.DEV_ENV;
+
 const app = express();
 const port = 3000;
 app.use(express.json());
@@ -31,8 +34,10 @@ app.post("/guestbook", (req, res) => {
   res.sendStatus(200);
 });
 
-app.listen(port, () => {
-  if (process.env.DEV_ENV == "true") {
+if (DEV_ENV == "true") {
+  app.listen(port, () => {
     console.log(`Listening on port http://localhost:${port}`);
-  }
-});
+  });
+}
+
+export default app;
