@@ -3,8 +3,5 @@
     "index.ts": {
       "runtime": "nodejs20.x"
     }
-  },
-  "lint": {
-    "ignoreDuringBuilds": true
   }
 }
