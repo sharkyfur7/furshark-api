@@ -17,17 +17,34 @@ if (!SUPABASE_KEY) {
 
 const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_KEY);
 
-export async function getMessages(page: number) {
-  const ENTRIES_PER_PAGE = 8;
-  const START = page * ENTRIES_PER_PAGE;
-  const END = START + ENTRIES_PER_PAGE;
+export async function getMessages() {
+  // const ENTRIES_PER_PAGE = 8;
+  // const START = page * ENTRIES_PER_PAGE;
+  // const END = START + ENTRIES_PER_PAGE;
 
   const { data, error } = await supabase
     .from("messages")
     .select()
     .eq("visible", true)
-    .order("id", { ascending: false })
-    .range(START, END);
+    .is("reply_to", null)
+    .order("created", { ascending: false })
+    .select("id, created, name, content, site");
+
+  if (error) {
+    console.log(error);
+    return [];
+  } else {
+    return data;
+  }
+}
+
+export async function getMessageReplies(id: number) {
+  const { data, error } = await supabase
+    .from("messages")
+    .select()
+    .eq("visible", true)
+    .eq("reply_to", id)
+    .order("created", { ascending: false });
 
   if (error) {
     console.log(error);
@@ -40,6 +57,22 @@ export async function getMessages(page: number) {
 
     return data;
   }
+}
+
+export async function getMessageData() {
+  let data = await getMessages();
+  let response = {
+    count: data.length,
+    entries: data,
+  };
+
+  for (const message of response.entries) {
+    let replies = await getMessageReplies(message.id);
+    message.replies = replies;
+    message.reply_count = replies.length;
+  }
+
+  return response;
 }
 
 export async function insertMessage(name: string, content: string, reply: number | null, site: string | null) {

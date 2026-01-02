@@ -1,5 +1,5 @@
 import express from "express";
-import { getMessages, insertMessage } from "./guestbook_database.js";
+import { getMessageData, insertMessage } from "./guestbook_database.js";
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -17,24 +17,7 @@ app.get("/", (req, res): void => {
 });
 
 app.get("/guestbook", (req, res) => {
-  // make sure request body is defined
-  if (!req.body) {
-    req.body = {};
-  }
-
-  let { page } = req.body;
-
-  page = Number(page);
-  if (page < 0 || Number.isNaN(page)) {
-    page = 0;
-  }
-
-  getMessages(page).then((data) => {
-    let response = {
-      count: data.length,
-      entries: data,
-    };
-
+  getMessageData().then((response) => {
     res.json(response);
   });
 });
