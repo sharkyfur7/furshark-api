@@ -68,7 +68,11 @@ export async function getMessageData() {
 
   for (const message of response.entries) {
     let replies = await getMessageReplies(message.id);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     message.replies = replies;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     message.reply_count = replies.length;
   }
 
