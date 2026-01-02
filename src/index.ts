@@ -1,6 +1,7 @@
 import express from "express";
 import { getMessages, insertMessage } from "./guestbook_database.js";
 import dotenv from "dotenv";
+import cors from "cors";
 
 dotenv.config({ quiet: true });
 
@@ -9,9 +10,9 @@ const DEV_ENV = process.env.DEV_ENV;
 const app = express();
 const port = 3000;
 app.use(express.json());
+app.use(cors());
 
 app.get("/", (req, res): void => {
-  console.log(req.body);
   res.json("Hello, api!");
 });
 
