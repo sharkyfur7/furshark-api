@@ -40,14 +40,37 @@ app.get("/guestbook", (req, res) => {
 });
 
 app.post("/guestbook", (req, res) => {
-  const { name, content } = req.body;
-
-  if (!name || !content) {
-    res.status(400).json("ERROR: missing `name` or `content` parameters");
+  if (!req.body) {
+    res.status(400).json("ERROR: request has no body");
     return;
   }
 
-  insertMessage(name, content, null);
+  if (!req.body.name) {
+    res.status(400).json("ERROR: missing `name`");
+    return;
+  }
+
+  if (!req.body.content) {
+    res.status(400).json("ERROR: missing `content`");
+    return;
+  }
+
+  const { name, content } = req.body;
+  let reply_to = null;
+  if (req.body.reply_to) {
+    reply_to = Number(req.body.reply_to);
+  }
+  let site = null;
+  if (req.body.site) {
+    try {
+      site = new URL(req.body.site).toString();
+    } catch {
+      res.status(400).json("ERROR: invalid site url");
+      return;
+    }
+  }
+
+  insertMessage(name, content, reply_to, site);
 
   res.sendStatus(200);
 });

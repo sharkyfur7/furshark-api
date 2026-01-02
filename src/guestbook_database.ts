@@ -42,8 +42,10 @@ export async function getMessages(page: number) {
   }
 }
 
-export async function insertMessage(name: string, content: string, reply: number | null) {
-  const { error } = await supabase.from("messages").insert({ name: name, content: content, reply_to: reply });
+export async function insertMessage(name: string, content: string, reply: number | null, site: string | null) {
+  const { error } = await supabase
+    .from("messages")
+    .insert({ name: name, content: content, reply_to: reply, site: site });
 
   if (error) {
     console.log(error);

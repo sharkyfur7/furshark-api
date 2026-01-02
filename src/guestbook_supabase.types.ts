@@ -21,6 +21,7 @@ export type Database = {
           id: number
           name: string
           reply_to: number | null
+          site: string | null
           visible: boolean
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           id?: number
           name: string
           reply_to?: number | null
+          site?: string | null
           visible?: boolean
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           id?: number
           name?: string
           reply_to?: number | null
+          site?: string | null
           visible?: boolean
         }
         Relationships: []
