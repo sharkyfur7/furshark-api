@@ -11,6 +11,7 @@ const app = express();
 const port = 3000;
 app.use(express.json());
 app.use(cors());
+app.set("trust proxy", 1);
 
 if (!DEV_ENV) {
   const limiter = rateLimit({
