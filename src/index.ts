@@ -48,7 +48,7 @@ app.get("/guestbook", (req, res) => {
   });
 });
 
-app.post("/guestbook", (req, res) => {
+app.post("/guestbook", async (req, res) => {
   if (!req.body) {
     res.status(400).json("ERROR: request has no body");
     return;
@@ -79,13 +79,15 @@ app.post("/guestbook", (req, res) => {
     }
   }
 
-  insertMessage(name, content, reply_to, site);
+  await insertMessage(name, content, reply_to, site);
+  await notify(
+    process.env.NTFY_FURSHARK_API,
+    `[${new Date().toLocaleDateString()}] New guestbook comment by "${name}"`
+  );
   res.sendStatus(200);
-
-  notify(process.env.NTFY_FURSHARK_API, `[${new Date().toLocaleDateString()}] New guestbook comment by "${name}"`);
 });
 
-app.post("/ntfy", (req, res) => {
+app.post("/ntfy", async (req, res) => {
   if (!req.body) {
     res.status(400).json("ERROR: request has no body");
     console.log(req.body);
@@ -98,8 +100,8 @@ app.post("/ntfy", (req, res) => {
     return;
   }
 
-  insertNotification(req.body.text);
-  notify(process.env.NTFY_MOBILE, req.body.text);
+  await insertNotification(req.body.text);
+  await notify(process.env.NTFY_MOBILE, req.body.text);
   res.sendStatus(200);
 });
 
