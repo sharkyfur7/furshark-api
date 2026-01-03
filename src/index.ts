@@ -99,8 +99,8 @@ app.post("/ntfy", (req, res) => {
   }
 
   insertNotification(req.body.text);
-  res.sendStatus(200);
   notify(process.env.NTFY_MOBILE, req.body.text);
+  res.sendStatus(200);
 });
 
 if (DEV_ENV == "true") {

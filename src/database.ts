@@ -21,7 +21,7 @@ export async function insertNotification(text: string) {
   const { error } = await supabase.from("ntfy").insert({ text: text });
 
   if (error) {
-    console.log(error);
+    throw new Error(`${error.code} ${error.name} - ${error.message} (${error.hint}) // ${error.details}`);
   }
 }
 
@@ -39,8 +39,7 @@ export async function getMessages() {
     .select("id, created, name, content, site");
 
   if (error) {
-    console.log(error);
-    return [];
+    throw new Error(`${error.code} ${error.name} - ${error.message} (${error.hint}) // ${error.details}`);
   } else {
     return data;
   }
@@ -55,8 +54,7 @@ export async function getMessageReplies(id: number) {
     .order("created", { ascending: false });
 
   if (error) {
-    console.log(error);
-    return [];
+    throw new Error(`${error.code} ${error.name} - ${error.message} (${error.hint}) // ${error.details}`);
   } else {
     // the client does not need the visible column since it's always going to be true
     data.forEach((val) => {
@@ -93,6 +91,6 @@ export async function insertMessage(name: string, content: string, reply: number
     .insert({ name: name, content: content, reply_to: reply, site: site });
 
   if (error) {
-    console.log(error);
+    throw new Error(`${error.code} ${error.name} - ${error.message} (${error.hint}) // ${error.details}`);
   }
 }
