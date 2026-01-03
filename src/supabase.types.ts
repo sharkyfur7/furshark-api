@@ -44,6 +44,24 @@ export type Database = {
         }
         Relationships: []
       }
+      ntfy: {
+        Row: {
+          date: string
+          id: number
+          text: string
+        }
+        Insert: {
+          date?: string
+          id?: number
+          text: string
+        }
+        Update: {
+          date?: string
+          id?: number
+          text?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

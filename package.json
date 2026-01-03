@@ -22,7 +22,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "gen-db-types": "npx supabase gen types typescript --project-id qpriireeiyjxoldhmlzg > src/guestbook_supabase.types.ts"
+    "gen-db-types": "npx supabase gen types typescript --project-id qpriireeiyjxoldhmlzg > src/supabase.types.ts"
   },
   "type": "module",
   "keywords": [],

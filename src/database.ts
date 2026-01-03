@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import type { Database } from "./guestbook_supabase.types.js";
+import type { Database } from "./supabase.types.js";
 
 dotenv.config({ quiet: true });
 
@@ -16,6 +16,14 @@ if (!SUPABASE_KEY) {
 }
 
 const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_KEY);
+
+export async function insertNotification(text: string) {
+  const { error } = await supabase.from("ntfy").insert({ text: text });
+
+  if (error) {
+    console.log(error);
+  }
+}
 
 export async function getMessages() {
   // const ENTRIES_PER_PAGE = 8;

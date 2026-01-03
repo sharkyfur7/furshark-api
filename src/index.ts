@@ -1,5 +1,5 @@
 import express from "express";
-import { getMessageData, insertMessage } from "./guestbook_database.js";
+import { getMessageData, insertMessage, insertNotification } from "./database.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
@@ -23,6 +23,17 @@ if (!DEV_ENV) {
   });
 
   app.use(limiter);
+}
+
+async function notify(url: string, msg: string) {
+  let resp = await fetch(url, {
+    method: "POST", // PUT works too
+    body: msg,
+  });
+
+  if (!resp.ok) {
+    throw new Error(`Error trying to send ntfy.sh notification (${resp.status}). ${await resp.json()}`);
+  }
 }
 
 app.get("/", (req, res): void => {
@@ -67,7 +78,26 @@ app.post("/guestbook", (req, res) => {
   }
 
   insertMessage(name, content, reply_to, site);
+  res.sendStatus(200);
 
+  notify(process.env.NTFY_FURSHARK_API, `[${new Date().toLocaleDateString()}] New guestbook comment by "${name}"`);
+});
+
+app.post("/ntfy", (req, res) => {
+  if (!req.body) {
+    res.status(400).json("ERROR: request has no body");
+    console.log(req.body);
+    return;
+  }
+
+  if (!req.body) {
+    res.status(400).json("ERROR: missing `text`");
+    console.log(req.body);
+    return;
+  }
+
+  insertNotification(req.body.text);
+  notify(process.env.NTFY_MOBILE, req.body.text);
   res.sendStatus(200);
 });
 
