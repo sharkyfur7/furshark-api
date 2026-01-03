@@ -30,7 +30,7 @@ async function notify(url: string, msg: string) {
   let resp = await fetch(url, {
     method: "POST", // PUT works too
     body: msg,
-    headers: { "Content-Type": "text/plain" },
+    headers: { "Content-Type": "text/plain", "User-Agent": "vercel-serverless" },
   });
 
   if (!resp.ok) {
