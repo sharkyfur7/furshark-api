@@ -30,6 +30,7 @@ async function notify(url: string, msg: string) {
   let resp = await fetch(url, {
     method: "POST", // PUT works too
     body: msg,
+    headers: { "Content-Type": "text/plain" },
   });
 
   if (!resp.ok) {
@@ -98,8 +99,8 @@ app.post("/ntfy", (req, res) => {
   }
 
   insertNotification(req.body.text);
-  notify(process.env.NTFY_MOBILE, req.body.text);
   res.sendStatus(200);
+  notify(process.env.NTFY_MOBILE, req.body.text);
 });
 
 if (DEV_ENV == "true") {
