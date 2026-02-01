@@ -6,12 +6,20 @@ import { rateLimit } from "express-rate-limit";
 
 dotenv.config({ quiet: true });
 const DEV_ENV = process.env.DEV_ENV;
+const NTFY_FURSHARK_API = process.env.NTFY_FURSHARK_API;
+const NTFY_MOBILE = process.env.NTFY_MOBILE;
 
 const app = express();
 const port = 3000;
 app.use(express.json());
 app.use(cors());
 app.set("trust proxy", 1);
+
+if (!NTFY_FURSHARK_API) {
+  throw new Error("No NTFY_FURSHARK_API env variable!");
+} else if (!NTFY_MOBILE) {
+  throw new Error("No NTFY_MOBILE env variable!");
+}
 
 if (!DEV_ENV) {
   const limiter = rateLimit({
@@ -34,18 +42,18 @@ async function notify(url: string, msg: string) {
   });
 
   if (!resp.ok) {
-    throw new Error(`Error trying to send ntfy.sh notification (${resp.status}). ${await resp.json()}`);
+    throw new Error(
+      `Error trying to send ntfy.sh notification (${resp.status}). ${await resp.json()}`,
+    );
   }
 }
 
 app.get("/", (req, res): void => {
-  res.json("Hello, api!");
+  res.json("Hello, api! Now on a Raspberry Pi3!");
 });
 
 app.get("/guestbook", (req, res) => {
-  getMessageData().then((response) => {
-    res.json(response);
-  });
+  res.json(getMessageData());
 });
 
 app.post("/guestbook", async (req, res) => {
@@ -79,10 +87,10 @@ app.post("/guestbook", async (req, res) => {
     }
   }
 
-  await insertMessage(name, content, reply_to, site);
+  insertMessage(name, content, reply_to, site);
   await notify(
-    process.env.NTFY_FURSHARK_API,
-    `[${new Date().toLocaleDateString()}] New guestbook comment by "${name}"`
+    NTFY_FURSHARK_API,
+    `[${new Date().toLocaleDateString()}] New guestbook comment by "${name}"`,
   );
   res.sendStatus(200);
 });
@@ -90,25 +98,26 @@ app.post("/guestbook", async (req, res) => {
 app.post("/ntfy", async (req, res) => {
   if (!req.body) {
     res.status(400).json("ERROR: request has no body");
-    console.log(req.body);
     return;
   }
 
-  if (!req.body) {
+  if (!req.body.text) {
     res.status(400).json("ERROR: missing `text`");
-    console.log(req.body);
     return;
   }
 
-  await insertNotification(req.body.text);
-  await notify(process.env.NTFY_MOBILE, req.body.text);
-  res.sendStatus(200);
+  try {
+    insertNotification(req.body.text);
+    await notify(NTFY_MOBILE, req.body.text);
+    res.sendStatus(200);
+  } catch (e) {
+    console.error("Error in /ntfy endpoint:", e);
+    res.sendStatus(500).json("ERROR: Failed to process notification");
+  }
 });
 
-if (DEV_ENV == "true") {
-  app.listen(port, () => {
-    console.log(`Listening on port http://localhost:${port}`);
-  });
-}
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Listening on port http://localhost:${port}`);
+});
 
 export default app;

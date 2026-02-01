@@ -1,96 +1,75 @@
-import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import type { Database } from "./supabase.types.js";
+import Database from "better-sqlite3";
+import { Message, Ntfy, MessageInsert, NtfyInsert, MessageWithReplies } from "./types.js";
 
 dotenv.config({ quiet: true });
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const DB_PATH = process.env.DB_PATH;
+const db = new Database(DB_PATH);
+db.pragma("journal_mode = WAL");
 
-if (!SUPABASE_URL) {
-  throw new Error("env var SUPABASE_URL is not set!");
+if (!DB_PATH) {
+  throw new Error("env var DB_PATH is not set!");
 }
 
-if (!SUPABASE_KEY) {
-  throw new Error("env var SUPABASE_KEY is not set!");
+export function insertNotification(text: string) {
+  const msg: NtfyInsert = {
+    text: text,
+  };
+
+  db.prepare("INSERT INTO ntfy (text) VALUES (?)").run(msg.text);
 }
 
-const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_KEY);
-
-export async function insertNotification(text: string) {
-  const { error } = await supabase.from("ntfy").insert({ text: text });
-
-  if (error) {
-    throw new Error(`${error.code} ${error.name} - ${error.message} (${error.hint}) // ${error.details}`);
-  }
+export function getMessages() {
+  const rows = db
+    .prepare("SELECT id, created, name, content, site FROM messages WHERE visible = 1")
+    .all() as Message[];
+  return rows;
 }
 
-export async function getMessages() {
-  // const ENTRIES_PER_PAGE = 8;
-  // const START = page * ENTRIES_PER_PAGE;
-  // const END = START + ENTRIES_PER_PAGE;
+export function getMessageReplies(id: number) {
+  const rows = db
+    .prepare(
+      "SELECT id, created, name, content, site FROM messages WHERE visible = 1 AND reply_to = ? ORDER BY created DESC",
+    )
+    .all(id) as Message[];
 
-  const { data, error } = await supabase
-    .from("messages")
-    .select()
-    .eq("visible", true)
-    .is("reply_to", null)
-    .order("created", { ascending: false })
-    .select("id, created, name, content, site");
-
-  if (error) {
-    throw new Error(`${error.code} ${error.name} - ${error.message} (${error.hint}) // ${error.details}`);
-  } else {
-    return data;
-  }
+  return rows;
 }
 
-export async function getMessageReplies(id: number) {
-  const { data, error } = await supabase
-    .from("messages")
-    .select()
-    .eq("visible", true)
-    .eq("reply_to", id)
-    .order("created", { ascending: false });
-
-  if (error) {
-    throw new Error(`${error.code} ${error.name} - ${error.message} (${error.hint}) // ${error.details}`);
-  } else {
-    // the client does not need the visible column since it's always going to be true
-    data.forEach((val) => {
-      val.visible = undefined;
-    });
-
-    return data;
-  }
-}
-
-export async function getMessageData() {
-  let data = await getMessages();
+export function getMessageData() {
+  let data = getMessages();
   let response = {
     count: data.length,
-    entries: data,
+    entries: data as MessageWithReplies[],
   };
 
   for (const message of response.entries) {
-    let replies = await getMessageReplies(message.id);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    let replies = getMessageReplies(message.id);
     message.replies = replies;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     message.reply_count = replies.length;
   }
 
   return response;
 }
 
-export async function insertMessage(name: string, content: string, reply: number | null, site: string | null) {
-  const { error } = await supabase
-    .from("messages")
-    .insert({ name: name, content: content, reply_to: reply, site: site });
+export function insertMessage(
+  name: string,
+  content: string,
+  reply: number | null,
+  site: string | null,
+) {
+  const msg: MessageInsert = {
+    name: name,
+    content: content,
+    reply_to: reply,
+    site: site,
+  };
 
-  if (error) {
-    throw new Error(`${error.code} ${error.name} - ${error.message} (${error.hint}) // ${error.details}`);
-  }
+  db.prepare("INSERT INTO messages (name, content, reply_to, site) VALUES (?, ?, ?, ?)").run(
+    msg.name,
+    msg.content,
+    msg.reply_to,
+    msg.site,
+  );
 }

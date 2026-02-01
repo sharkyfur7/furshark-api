@@ -1,0 +1,23 @@
+version: "3.8"
+services:
+  api:
+    container_name: api
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
