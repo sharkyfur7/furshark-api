@@ -18,7 +18,8 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: tunnel --no-autoupdate run --url http://localhost:3000
+    network_mode: host
+    command: tunnel run --url http://localhost:3000
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
     depends_on:
