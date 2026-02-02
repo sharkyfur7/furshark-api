@@ -35,7 +35,9 @@ export function insertNotification(text: string) {
 
 export function getMessages() {
   const rows = db
-    .prepare("SELECT id, created, name, content, site FROM messages WHERE visible = 1")
+    .prepare(
+      `SELECT id, created, name, content, site FROM messages WHERE visible = 1 AND reply_to IS NULL ORDER BY created DESC;`,
+    )
     .all() as Message[];
   return rows;
 }
@@ -43,7 +45,7 @@ export function getMessages() {
 export function getMessageReplies(id: number) {
   const rows = db
     .prepare(
-      "SELECT id, created, name, content, site FROM messages WHERE visible = 1 AND reply_to = ? ORDER BY created DESC",
+      "SELECT id, created, name, content, site FROM messages WHERE visible = 1 AND reply_to = ? ORDER BY created DESC;",
     )
     .all(id) as Message[];
 
