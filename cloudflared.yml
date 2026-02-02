@@ -1,0 +1,7 @@
+tunnel: 2524d390-9cc4-4d02-9870-d3d637dd4f25
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: api.furshark.net
+    service: http://api:3000
+  - service: http_status:404
