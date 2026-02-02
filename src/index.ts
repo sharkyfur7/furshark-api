@@ -1,8 +1,9 @@
 import express from "express";
-import { getMessageData, insertMessage, insertNotification } from "./database.js";
+import { backup, getMessageData, insertMessage, insertNotification } from "./database.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
+import * as cron from "node-cron";
 
 dotenv.config({ quiet: true });
 const DEV_ENV = process.env.DEV_ENV;
@@ -119,5 +120,19 @@ app.post("/ntfy", async (req, res) => {
 app.listen(port, "0.0.0.0", () => {
   console.log(`Listening on port http://localhost:${port}`);
 });
+
+cron.schedule("0 2 * * Sunday", async () => {
+  console.log("[CRON] Initiating weekly backup");
+
+  try {
+    await backup();
+    console.log("[CRON] Weekly backup completed successfully");
+  } catch (error) {
+    console.error("[CRON] Weekly backup failed:", error);
+  }
+});
+
+console.log("Init database backup");
+await backup();
 
 export default app;

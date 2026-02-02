@@ -11,6 +11,7 @@ services:
       - "3000:3000"
     volumes:
       - ./data:/app/data
+      - ./backup:/app/backup
     environment:
       - NODE_ENV=production
     env_file:

@@ -1,16 +1,29 @@
 import dotenv from "dotenv";
 import Database from "better-sqlite3";
 import { Message, Ntfy, MessageInsert, NtfyInsert, MessageWithReplies } from "./types.js";
+import { readdirSync, statSync, unlinkSync } from "node:fs";
+import path from "node:path";
 
 dotenv.config({ quiet: true });
 
 const DB_PATH = process.env.DB_PATH;
-const db = new Database(DB_PATH);
-db.pragma("journal_mode = WAL");
+const BACKUP_DIR = process.env.BACKUP_DIR;
+const BACKUPS_KEPT = Number(process.env.BACKUPS_KEPT);
 
 if (!DB_PATH) {
   throw new Error("env var DB_PATH is not set!");
 }
+
+if (!BACKUP_DIR) {
+  throw new Error("env var BACKUP_DIR is not set!");
+}
+
+if (!BACKUPS_KEPT || BACKUPS_KEPT < 0) {
+  throw new Error("env var BACKUPS_KEPT is not set or is invalid!");
+}
+
+const db = new Database(DB_PATH);
+db.pragma("journal_mode = WAL");
 
 export function insertNotification(text: string) {
   const msg: NtfyInsert = {
@@ -35,6 +48,39 @@ export function getMessageReplies(id: number) {
     .all(id) as Message[];
 
   return rows;
+}
+
+export async function backup() {
+  console.log(`[${Date.now()}] Backup initiated`);
+
+  const backupPath = path.join(BACKUP_DIR, `backup-${Date.now()}.backup.sqlite`);
+
+  try {
+    await db.backup(backupPath);
+    console.log("Backup complete!");
+
+    console.log("Purging old backups");
+
+    const files = readdirSync(BACKUP_DIR, { withFileTypes: true })
+      .filter((f) => f.isFile())
+      .map((f) => {
+        const filePath = path.join(BACKUP_DIR, f.name);
+        return {
+          name: f.name,
+          path: filePath,
+          birthtime: statSync(filePath).birthtime,
+        };
+      });
+
+    files.sort((a, b) => b.birthtime.getTime() - a.birthtime.getTime());
+    const filesToDelete = files.slice(BACKUPS_KEPT);
+    filesToDelete.forEach((f) => unlinkSync(f.path));
+
+    console.log("Old backups deleted");
+  } catch (err) {
+    console.log("Backup failed:", err);
+    throw err;
+  }
 }
 
 export function getMessageData() {
