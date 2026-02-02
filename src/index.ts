@@ -13,7 +13,7 @@ const NTFY_MOBILE = process.env.NTFY_MOBILE;
 const app = express();
 const port = 3000;
 app.use(express.json());
-app.use(cors({ origin: ["https://furshark.net"] }));
+app.use(cors());
 app.set("trust proxy", 1);
 
 if (!NTFY_FURSHARK_API) {
