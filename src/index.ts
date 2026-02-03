@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
 import * as cron from "node-cron";
+import { getRecentTracks, getUserInfo } from "./lastfm.js";
 
 dotenv.config({ quiet: true });
 const DEV_ENV = process.env.DEV_ENV;
@@ -50,11 +51,55 @@ async function notify(url: string, msg: string) {
 }
 
 app.get("/", (req, res): void => {
-  res.json("Hello, api! Now on a Raspberry Pi3!");
+  res.status(200).json("I am alive.");
 });
 
 app.get("/guestbook", (req, res) => {
   res.json(getMessageData());
+});
+
+app.get("/lastfm", async (req, res) => {
+  const lastfm_res = await fetch("https://ws.audioscrobbler.com/2.0/");
+
+  if (lastfm_res.status < 500) {
+    res.status(200).json(`lastfm's api seems to be running!`);
+  } else {
+    res.status(502).json(`lastfm's api seems to be down, (response ${lastfm_res.status})`);
+  }
+});
+
+// Recent tracks from last.fm
+app.get("/lastfm/recent", async (req, res) => {
+  if (!req.query.user) {
+    res.status(400).json("`user` query is missing");
+    return;
+  }
+
+  const user = req.query.user.toString();
+  const limit = Number(req.query.limit);
+
+  try {
+    res.status(200).json(await getRecentTracks(user, limit));
+  } catch (e) {
+    res.status(500).json("Internal server error while getting recent tracks");
+    throw e;
+  }
+});
+
+// Get user information
+app.get("/lastfm/info", async (req, res) => {
+  if (!req.query.user) {
+    res.status(400).json("`user` query is missing");
+    return;
+  }
+
+  try {
+    const user = req.query.user.toString();
+    res.status(200).json(await getUserInfo(user));
+  } catch (e) {
+    res.status(500).json("Internal server error while getting user info");
+    throw e;
+  }
 });
 
 app.post("/guestbook", async (req, res) => {
@@ -113,7 +158,7 @@ app.post("/ntfy", async (req, res) => {
     res.sendStatus(200);
   } catch (e) {
     console.error("Error in /ntfy endpoint:", e);
-    res.sendStatus(500).json("ERROR: Failed to process notification");
+    res.status(500).json("ERROR: Failed to process notification");
   }
 });
 
