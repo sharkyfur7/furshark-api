@@ -1,5 +1,5 @@
 services:
-  api:
+  website-backend:
     platform: linux/arm64
     build:
       context: .

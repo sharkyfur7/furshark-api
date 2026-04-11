@@ -1,5 +1,10 @@
 import express from "express";
-import { backup, getMessageData, insertMessage, insertNotification } from "./database.js";
+import {
+  backup,
+  getMessageData,
+  insertMessage,
+  insertNotification,
+} from "./database.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
@@ -8,7 +13,7 @@ import { getRecentTracks, getUserInfo } from "./lastfm.js";
 
 dotenv.config({ quiet: true });
 const DEV_ENV = process.env.DEV_ENV;
-const NTFY_FURSHARK_API = process.env.NTFY_FURSHARK_API;
+const NTFY_BACKEND = process.env.NTFY_BACKEND;
 const NTFY_MOBILE = process.env.NTFY_MOBILE;
 
 const app = express();
@@ -17,8 +22,8 @@ app.use(express.json());
 app.use(cors());
 app.set("trust proxy", 1);
 
-if (!NTFY_FURSHARK_API) {
-  throw new Error("No NTFY_FURSHARK_API env variable!");
+if (!NTFY_BACKEND) {
+  throw new Error("No NTFY_BACKEND env variable!");
 } else if (!NTFY_MOBILE) {
   throw new Error("No NTFY_MOBILE env variable!");
 }
@@ -40,7 +45,10 @@ async function notify(url: string, msg: string) {
   let resp = await fetch(url, {
     method: "POST", // PUT works too
     body: msg,
-    headers: { "Content-Type": "text/plain", "User-Agent": "vercel-serverless" },
+    headers: {
+      "Content-Type": "text/plain",
+      "User-Agent": "vercel-serverless",
+    },
   });
 
   if (!resp.ok) {
@@ -64,7 +72,9 @@ app.get("/lastfm", async (req, res) => {
   if (lastfm_res.status < 500) {
     res.status(200).json(`lastfm's api seems to be running!`);
   } else {
-    res.status(502).json(`lastfm's api seems to be down, (response ${lastfm_res.status})`);
+    res
+      .status(502)
+      .json(`lastfm's api seems to be down, (response ${lastfm_res.status})`);
   }
 });
 
@@ -135,7 +145,7 @@ app.post("/guestbook", async (req, res) => {
 
   insertMessage(name, content, reply_to, site);
   await notify(
-    NTFY_FURSHARK_API,
+    NTFY_BACKEND,
     `[${new Date().toLocaleDateString()}] New guestbook comment by "${name}"`,
   );
   res.sendStatus(200);

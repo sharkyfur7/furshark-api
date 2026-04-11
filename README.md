@@ -1,4 +1,4 @@
-# Furshark API (Express API)
+# Website backend (Express API)
 
 ## Endpoints
 
@@ -134,7 +134,7 @@ Rate limiting is enabled in production (when `DEV_ENV` is not set):
 
 Required:
 
-- `NTFY_FURSHARK_API` - NTFY URL for API notifications
+- `NTFY_BACKEND` - NTFY URL for backend notifications
 - `NTFY_MOBILE` - NTFY URL for mobile notifications
 - `LASTFM_KEY` - Last.fm API key
 
