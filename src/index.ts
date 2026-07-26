@@ -9,7 +9,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
 import * as cron from "node-cron";
-import { getRecentTracks, getUserInfo } from "./lastfm.js";
+import { proxyLastFm } from "./lastfm.js";
 
 dotenv.config({ quiet: true });
 const DEV_ENV = process.env.DEV_ENV;
@@ -78,37 +78,27 @@ app.get("/lastfm", async (req, res) => {
   }
 });
 
-// Recent tracks from last.fm
-app.get("/lastfm/recent", async (req, res) => {
-  if (!req.query.user) {
+// Last.fm proxy
+app.get("/lastfm/proxy/:method", async (req, res) => {
+  const method = req.params.method;
+  const { user, ...rest } = req.query;
+
+  if (!user) {
     res.status(400).json("`user` query is missing");
     return;
   }
 
-  const user = req.query.user.toString();
-  const limit = Number(req.query.limit);
-
-  try {
-    res.status(200).json(await getRecentTracks(user, limit));
-  } catch (e) {
-    console.error("Error fetching recent tracks:", e);
-    res.status(500).json("Internal server error while getting recent tracks");
-  }
-});
-
-// Get user information
-app.get("/lastfm/info", async (req, res) => {
-  if (!req.query.user) {
-    res.status(400).json("`user` query is missing");
-    return;
+  const queryParams: Record<string, string> = { user: user.toString() };
+  for (const [key, value] of Object.entries(rest)) {
+    if (typeof value === "string") queryParams[key] = value;
   }
 
   try {
-    const user = req.query.user.toString();
-    res.status(200).json(await getUserInfo(user));
-  } catch (e) {
-    console.error("Error fetching user info:", e);
-    res.status(500).json("Internal server error while getting user info");
+    res.status(200).json(await proxyLastFm(method, queryParams));
+  } catch (e: any) {
+    console.error(`Error in /lastfm/proxy/${method}:`, e);
+    const status = e.message?.startsWith("Method") ? 400 : 500;
+    res.status(status).json(e.message);
   }
 });
 

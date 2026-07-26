@@ -59,52 +59,36 @@ Health check for Last.fm API availability
 
 - `502 Bad Gateway` - Last.fm API appears to be down
 
-### GET /lastfm/recent
+### GET /lastfm/proxy/:method
 
-Retrieves recent tracks for a Last.fm user
+Proxies requests to the Last.fm API. The API key and required headers are injected server-side. All query params are forwarded to Last.fm.
 
-**Query Parameters:**
+**Allowed methods:** `user.getRecentTracks`, `user.getInfo`, `user.getTopAlbums`, `user.getTopArtists`, `user.getTopTracks`
 
-- `user` (required) - Last.fm username
-- `limit` (optional) - Number of tracks to return (default: 50, minimum: 1)
+**Path Parameter:**
 
-**Example:**
-
-```
-GET /lastfm/recent?user=username&limit=10
-```
-
-**Response:** `200 OK`
-
-For response contents, see [last.fm/api getRecentTracks method](https://www.last.fm/api/show/user.getRecentTracks) or the type `RecentTracks` from `src/types.ts`
-
-**Error Responses:**
-
-- `400 Bad Request` - Missing required parameter
-- `500 Internal Server Error` - API request failed
-
-### GET /lastfm/info
-
-Retrieves user information about a Last.fm user
+- `method` - Last.fm API method (must be one of the allowed methods above)
 
 **Query Parameters:**
 
 - `user` (required) - Last.fm username
+- Any additional params are forwarded to Last.fm (e.g. `limit`, `page`, `extended`)
 
-**Example:**
+**Examples:**
 
 ```
-GET /lastfm/info?user=username
+GET /lastfm/proxy/user.getRecentTracks?user=username&limit=10
+GET /lastfm/proxy/user.getInfo?user=username
 ```
 
-**Response:** `200 OK`
+**Response:** `200 OK` (raw Last.fm API JSON response)
 
-For response contents, see [last.fm/api getInfo method](https://www.last.fm/api/show/user.getInfo) or the type `UserInfo` from `src/types.ts`
+See [Last.fm API docs](https://www.last.fm/api) for response formats.
 
 **Error Responses:**
 
-- `400 Bad Request` - Missing required parameter
-- `500 Internal Server Error` - API request failed
+- `400 Bad Request` - Missing `user` param or disallowed method
+- `500 Internal Server Error` - Last.fm API request failed
 
 ### POST /ntfy
 
