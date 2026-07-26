@@ -19,9 +19,10 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: sharky
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          timeout: 900
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            git pull origin main
+            git pull https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/wirelessfishes/website-backend.git main
             docker compose build
             docker compose up -d
 
@@ -32,6 +33,7 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: sharky
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          timeout: 900
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             SHORT_SHA=$(git rev-parse --short HEAD)
