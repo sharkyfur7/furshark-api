@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Tailscale
+        uses: tailscale/github-actions@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          hostname: github-actions-runner
+
+      - name: Deploy to Pi
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: sharky
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            git pull origin main
+            docker compose build
+            docker compose up -d
+
+      - name: Notify
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: sharky
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            AUTHOR="${{ github.actor }}"
+            MSG=$(echo "${{ github.event.head_commit.message }}" | head -1)
+            curl -s -d "Deployed website-backend
+            Commit: ${SHORT_SHA}
+            Author: ${AUTHOR}
+            Message: ${MSG}" https://ntfy.sh/furshark-api
