@@ -33,7 +33,7 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: sharky
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          timeout: 900
+          timeout: 900s
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             SHORT_SHA=$(git rev-parse --short HEAD)
