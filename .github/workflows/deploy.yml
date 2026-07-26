@@ -47,4 +47,4 @@ jobs:
             curl -s -d "${STATUS} — website-backend
             Commit: ${SHORT_SHA}
             Author: ${AUTHOR}
-            Message: ${MSG}" https://ntfy.sh/furshark-api
+            Message: ${MSG}" ${{ secrets.BACKEND_NTFY_CHANNEL }}
