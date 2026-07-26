@@ -27,6 +27,7 @@ jobs:
             docker compose up -d
 
       - name: Notify
+        if: always()
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -37,7 +38,12 @@ jobs:
             SHORT_SHA=$(git rev-parse --short HEAD)
             AUTHOR="${{ github.actor }}"
             MSG=$(echo "${{ github.event.head_commit.message }}" | head -1)
-            curl -s -d "Deployed website-backend
+            if [ "${{ job.status }}" = "success" ]; then
+              STATUS="Success"
+            else
+              STATUS="Failed"
+            fi
+            curl -s -d "${STATUS} — website-backend
             Commit: ${SHORT_SHA}
             Author: ${AUTHOR}
             Message: ${MSG}" https://ntfy.sh/furshark-api
