@@ -9,10 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Tailscale
-        uses: tailscale/github-actions@v2
+        uses: tailscale/github-action@v4
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-          hostname: github-actions-runner
 
       - name: Deploy to Pi
         uses: appleboy/ssh-action@v1
