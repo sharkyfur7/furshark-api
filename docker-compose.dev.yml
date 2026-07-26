@@ -19,4 +19,4 @@ services:
       - NODE_ENV=development
     env_file:
       - .env
-    command: sh -c "rm -rf node_modules && npm install && npm run dev"
+    command: sh -c "if [ ! -d node_modules ]; then npm install; fi && npm run dev"

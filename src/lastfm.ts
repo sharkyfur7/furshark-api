@@ -17,15 +17,18 @@ export async function getRecentTracks(
     throw Error("env var LASTFM_KEY not set!");
   }
 
-  if (limit < 1) {
-    limit = 1;
-  }
+  if (limit === null || limit < 1) limit = 1;
 
   let fetch_url = `${RECENT_TRACKS_URL}&user=${user}&api_key=${API_KEY}&format=json&limit=${limit}`;
-  const response = await fetch(fetch_url);
+  const response = await fetch(fetch_url, {
+    headers: { "User-Agent": "wireless.fish-backend/1.0 (https://wireless.fish)" },
+  });
 
   if (!response.ok) {
-    throw new Error(`Last.fm API error: ${response.status} ${response.statusText}`);
+    const body = await response.text();
+    throw new Error(
+      `Last.fm API error: ${response.status} ${response.statusText} — ${body}`,
+    );
   }
 
   return await response.json();
@@ -41,10 +44,15 @@ export async function getUserInfo(user: string): Promise<UserInfo> {
   }
 
   let fetch_url = `${USER_INFO_URL}&user=${user}&api_key=${API_KEY}&format=json`;
-  const response = await fetch(fetch_url);
+  const response = await fetch(fetch_url, {
+    headers: { "User-Agent": "wireless.fish-backend/1.0 (https://wireless.fish)" },
+  });
 
   if (!response.ok) {
-    throw new Error(`Last.fm API error: ${response.status} ${response.statusText}`);
+    const body = await response.text();
+    throw new Error(
+      `Last.fm API error: ${response.status} ${response.statusText} — ${body}`,
+    );
   }
 
   return await response.json();

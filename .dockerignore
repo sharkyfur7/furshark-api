@@ -1,2 +1,12 @@
 .git
 node_modules
+data
+backup
+dist
+.env
+*.log
+docker-compose*.yml
+Dockerfile
+.dockerignore
+.gitignore
+README*

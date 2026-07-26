@@ -91,8 +91,8 @@ app.get("/lastfm/recent", async (req, res) => {
   try {
     res.status(200).json(await getRecentTracks(user, limit));
   } catch (e) {
+    console.error("Error fetching recent tracks:", e);
     res.status(500).json("Internal server error while getting recent tracks");
-    throw e;
   }
 });
 
@@ -107,8 +107,8 @@ app.get("/lastfm/info", async (req, res) => {
     const user = req.query.user.toString();
     res.status(200).json(await getUserInfo(user));
   } catch (e) {
+    console.error("Error fetching user info:", e);
     res.status(500).json("Internal server error while getting user info");
-    throw e;
   }
 });
 
