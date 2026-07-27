@@ -10,6 +10,7 @@ import cors from "cors";
 import { rateLimit } from "express-rate-limit";
 import * as cron from "node-cron";
 import { proxyLastFm } from "./lastfm.js";
+import { z } from "zod";
 
 dotenv.config({ quiet: true });
 const DEV_ENV = process.env.DEV_ENV;
@@ -102,59 +103,54 @@ app.get("/lastfm/proxy/:method", async (req, res) => {
   }
 });
 
+const GuestbookQuery = z.object({
+  name: z.string(),
+  content: z.string(),
+  reply_to: z.coerce
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .transform((v) => v ?? null),
+
+  // web url regex, see "Web URLs" section of https://zod.dev/api?id=optionals#urls
+  site: z
+    .url({
+      protocol: /^https?$/,
+      hostname: z.regexes.domain,
+    })
+    .optional()
+    .transform((v) => (v === undefined ? null : v)),
+});
+
 app.post("/guestbook", async (req, res) => {
-  if (!req.body) {
-    res.status(400).json("ERROR: request has no body");
-    return;
-  }
+  const result = GuestbookQuery.safeParse(req.body);
+  if (!result.success)
+    return res.status(400).json(z.treeifyError(result.error));
 
-  if (!req.body.name) {
-    res.status(400).json("ERROR: missing `name`");
-    return;
-  }
-
-  if (!req.body.content) {
-    res.status(400).json("ERROR: missing `content`");
-    return;
-  }
-
-  const { name, content } = req.body;
-  let reply_to = null;
-  if (req.body.reply_to) {
-    reply_to = Number(req.body.reply_to);
-  }
-  let site = null;
-  if (req.body.site) {
-    try {
-      site = new URL(req.body.site).toString();
-    } catch {
-      res.status(400).json("ERROR: invalid site url");
-      return;
-    }
-  }
-
+  const { name, content, reply_to, site } = result.data;
   insertMessage(name, content, reply_to, site);
+
   await notify(
     NTFY_BACKEND,
     `[${new Date().toLocaleDateString()}] New guestbook comment by "${name}"`,
   );
+
   res.sendStatus(200);
 });
 
-app.post("/ntfy", async (req, res) => {
-  if (!req.body) {
-    res.status(400).json("ERROR: request has no body");
-    return;
-  }
+const NtfyQuery = z.object({
+  text: z.string(),
+});
 
-  if (!req.body.text) {
-    res.status(400).json("ERROR: missing `text`");
-    return;
-  }
+app.post("/ntfy", async (req, res) => {
+  const result = NtfyQuery.safeParse(req.body);
+  if (!result.success)
+    return res.status(400).json(z.treeifyError(result.error));
 
   try {
-    insertNotification(req.body.text);
-    await notify(NTFY_MOBILE, req.body.text);
+    insertNotification(result.data.text);
+    await notify(NTFY_MOBILE, result.data.text);
     res.sendStatus(200);
   } catch (e) {
     console.error("Error in /ntfy endpoint:", e);
