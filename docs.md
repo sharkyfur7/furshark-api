@@ -9,10 +9,14 @@ Required:
 - `NTFY_BACKEND` - NTFY URL for backend notifications
 - `NTFY_MOBILE` - NTFY URL for mobile notifications
 - `LASTFM_KEY` - Last.fm API key
+- `DB_PATH` - Path to the SQLite database file
+- `BACKUP_DIR` - Directory for database backups
+- `BACKUPS_KEPT` - Number of backups to retain
 
 Optional:
 
 - `DEV_ENV` - Set to disable rate limiting (development mode)
+- `TUNNEL_TOKEN` - Used in Docker Compose for tunnel setup
 
 ## Scheduled Tasks
 
@@ -39,17 +43,20 @@ Retrieves all guestbook messages.
 
 **Response:**
 
-```js
-{
-  count: number,
-  entries: {
-    id: number,
-    name: string,
-    content: string,
-    reply_to: number | null,
-    site: string | null,
-    created_at: string,
-  },
+```ts
+interface GuestbookResponse {
+  count: number;
+  entries: GuestbookEntry[];
+}
+
+interface GuestbookEntry {
+  id: number;
+  name: string;
+  content: string;
+  replies: GuestbookEntry[];
+  reply_count: number;
+  site: string | null;
+  created: string;
 }
 ```
 
