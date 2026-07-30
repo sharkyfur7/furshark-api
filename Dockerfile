@@ -10,7 +10,6 @@ RUN pnpm rebuild better-sqlite3
 RUN pnpm prune --production
 
 FROM node:20-alpine
-RUN apk add --no-cache sqlite-dev
 RUN npm install -g pnpm
 WORKDIR /app
 COPY --from=build /app/dist ./dist

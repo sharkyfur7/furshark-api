@@ -20,6 +20,7 @@ jobs:
           username: sharky
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           timeout: 900s
+          command_timeout: 900s
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             git pull https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/wirelessfishes/website-backend.git main
