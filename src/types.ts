@@ -5,7 +5,8 @@ export interface Message {
   name: string;
   content: string;
   reply_to: number | null;
-  visible: number; // 0 or 1 (SQLite boolean)
+  visible: boolean;
+  verified: boolean;
   site: string | null;
 }
 
@@ -34,5 +35,3 @@ export interface NtfyInsert {
   text: string;
   date?: string;
 }
-
-

@@ -1,6 +1,12 @@
 import dotenv from "dotenv";
 import Database from "better-sqlite3";
-import { Message, Ntfy, MessageInsert, NtfyInsert, MessageWithReplies } from "./types.js";
+import {
+  Message,
+  Ntfy,
+  MessageInsert,
+  NtfyInsert,
+  MessageWithReplies,
+} from "./types.js";
 import { readdirSync, statSync, unlinkSync } from "node:fs";
 import path from "node:path";
 
@@ -36,7 +42,7 @@ export function insertNotification(text: string) {
 export function getMessages() {
   const rows = db
     .prepare(
-      `SELECT id, created, name, content, site FROM messages WHERE visible = 1 AND reply_to IS NULL ORDER BY created DESC;`,
+      `SELECT id, created, name, content, site, verified FROM messages WHERE visible = 1 AND reply_to IS NULL ORDER BY created DESC;`,
     )
     .all() as Message[];
   return rows;
@@ -45,7 +51,7 @@ export function getMessages() {
 export function getMessageReplies(id: number) {
   const rows = db
     .prepare(
-      "SELECT id, created, name, content, site FROM messages WHERE visible = 1 AND reply_to = ? ORDER BY created DESC;",
+      "SELECT id, created, name, content, site, verified FROM messages WHERE visible = 1 AND reply_to = ? ORDER BY created DESC;",
     )
     .all(id) as Message[];
 
@@ -55,7 +61,10 @@ export function getMessageReplies(id: number) {
 export async function backup() {
   console.log(`[${Date.now()}] Backup initiated`);
 
-  const backupPath = path.join(BACKUP_DIR, `backup-${Date.now()}.backup.sqlite`);
+  const backupPath = path.join(
+    BACKUP_DIR as string,
+    `backup-${Date.now()}.backup.sqlite`,
+  );
 
   try {
     await db.backup(backupPath);
@@ -63,10 +72,10 @@ export async function backup() {
 
     console.log("Purging old backups");
 
-    const files = readdirSync(BACKUP_DIR, { withFileTypes: true })
+    const files = readdirSync(BACKUP_DIR as string, { withFileTypes: true })
       .filter((f) => f.isFile())
       .map((f) => {
-        const filePath = path.join(BACKUP_DIR, f.name);
+        const filePath = path.join(BACKUP_DIR as string, f.name);
         return {
           name: f.name,
           path: filePath,
@@ -114,10 +123,7 @@ export function insertMessage(
     site: site,
   };
 
-  db.prepare("INSERT INTO messages (name, content, reply_to, site) VALUES (?, ?, ?, ?)").run(
-    msg.name,
-    msg.content,
-    msg.reply_to,
-    msg.site,
-  );
+  db.prepare(
+    "INSERT INTO messages (name, content, reply_to, site) VALUES (?, ?, ?, ?)",
+  ).run(msg.name, msg.content, msg.reply_to, msg.site);
 }

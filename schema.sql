@@ -5,6 +5,7 @@ CREATE TABLE messages (
     content TEXT NOT NULL,
     reply_to INTEGER,
     visible INTEGER DEFAULT 1 NOT NULL,
+    verified INTEGER DEFAULT 0 NOT NULL,
     site TEXT
   );
 CREATE TABLE sqlite_sequence(name,seq);

@@ -57,6 +57,7 @@ interface GuestbookEntry {
   reply_count: number;
   site: string | null;
   created: string;
+  verified: boolean;
 }
 ```
 
