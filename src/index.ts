@@ -115,12 +115,16 @@ const GuestbookQuery = z.object({
 
   // web url regex, see "Web URLs" section of https://zod.dev/api?id=optionals#urls
   site: z
-    .url({
-      protocol: /^https?$/,
-      hostname: z.regexes.domain,
-    })
-    .optional()
-    .transform((v) => (v === undefined ? null : v)),
+    .preprocess(
+      (v) => (v === "" || v == null ? undefined : v),
+      z
+        .url({
+          protocol: /^https?$/,
+          hostname: z.regexes.domain,
+        })
+        .optional(),
+    )
+    .transform((v) => v ?? null),
 });
 
 app.post("/guestbook", async (req, res) => {
